@@ -1,5 +1,6 @@
 /*
 ** OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder
+** Version 1.0.0
 **
 ** Copyright (c) GreaseMonkey, 2019
 **
@@ -39,6 +40,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <thread>
+
+#define OVERHILL2_VERSION "1.0.0"
 
 // SSE
 #include <xmmintrin.h>
@@ -682,6 +685,7 @@ int main(int argc, char *argv[])
 
 		} else {
 			fprintf(stderr, "OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder\n");
+			fprintf(stderr, "Version %s\n", OVERHILL2_VERSION);
 			fprintf(stderr, "Copyright (c) 2019, GreaseMonkey\n");
 			fprintf(stderr, "See the LICENCE.txt file this came with.\n");
 			fprintf(stderr, "(Alternatively, imagine the zlib licence with my name on it.)\n");
