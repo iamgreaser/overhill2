@@ -41,7 +41,7 @@
 #include <cstdio>
 #include <thread>
 
-#define OVERHILL2_VERSION "1.0.1"
+#define OVERHILL2_VERSION "1.0.1+git"
 
 // SSE
 #include <xmmintrin.h>
@@ -130,23 +130,31 @@ struct ssevec {
 	{
 	}
 
-	ssevec operator +(ssevec b) {
+	inline ssevec operator +(ssevec b) {
 		return ssevec(_mm_add_epi32(this->v, b.v));
 	}
 
-	ssevec operator *(ssevec b) {
+	inline ssevec operator -(ssevec b) {
+		return ssevec(_mm_sub_epi32(this->v, b.v));
+	}
+
+	inline ssevec operator *(ssevec b) {
 		return ssevec(_mm_mullo_epi32(this->v, b.v));
 	}
 
-	ssevec operator +(uint32_t b) {
+	inline ssevec operator +(uint32_t b) {
 		return ssevec(_mm_add_epi32(this->v, _mm_set1_epi32(b)));
 	}
 
-	ssevec operator *(uint32_t b) {
+	inline ssevec operator -(uint32_t b) {
+		return ssevec(_mm_sub_epi32(this->v, _mm_set1_epi32(b)));
+	}
+
+	inline ssevec operator *(uint32_t b) {
 		return ssevec(_mm_mullo_epi32(this->v, _mm_set1_epi32(b)));
 	}
 
-	ssevec operator %(ssevec b) {
+	inline ssevec operator %(ssevec b) {
 		// TODO SIMD version
 		return ssevec(_mm_setr_epi32(
 			_mm_extract_epi32(this->v, 0) % _mm_extract_epi32(b.v, 0),
@@ -155,7 +163,7 @@ struct ssevec {
 			_mm_extract_epi32(this->v, 3) % _mm_extract_epi32(b.v, 3)));
 	}
 
-	ssevec operator %(uint32_t b) {
+	inline ssevec operator %(uint32_t b) {
 		// TODO SIMD version
 		return ssevec(_mm_setr_epi32(
 			_mm_extract_epi32(this->v, 0) % b,
@@ -164,11 +172,11 @@ struct ssevec {
 			_mm_extract_epi32(this->v, 3) % b));
 	}
 
-	ssevec operator &(ssevec b) {
+	inline ssevec operator &(ssevec b) {
 		return ssevec(_mm_and_si128(this->v, b.v));
 	}
 
-	ssevec operator &(uint32_t b) {
+	inline ssevec operator &(uint32_t b) {
 		return ssevec(_mm_and_si128(this->v, _mm_set1_epi32(b)));
 	}
 };
@@ -183,23 +191,31 @@ struct avxvec {
 	{
 	}
 
-	avxvec operator +(avxvec b) {
+	inline avxvec operator +(avxvec b) {
 		return avxvec(_mm256_add_epi32(this->v, b.v));
 	}
 
-	avxvec operator *(avxvec b) {
+	inline avxvec operator -(avxvec b) {
+		return avxvec(_mm256_sub_epi32(this->v, b.v));
+	}
+
+	inline avxvec operator *(avxvec b) {
 		return avxvec(_mm256_mullo_epi32(this->v, b.v));
 	}
 
-	avxvec operator +(uint32_t b) {
+	inline avxvec operator +(uint32_t b) {
 		return avxvec(_mm256_add_epi32(this->v, _mm256_set1_epi32(b)));
 	}
 
-	avxvec operator *(uint32_t b) {
+	inline avxvec operator -(uint32_t b) {
+		return avxvec(_mm256_sub_epi32(this->v, _mm256_set1_epi32(b)));
+	}
+
+	inline avxvec operator *(uint32_t b) {
 		return avxvec(_mm256_mullo_epi32(this->v, _mm256_set1_epi32(b)));
 	}
 
-	avxvec operator %(avxvec b) {
+	inline avxvec operator %(avxvec b) {
 		// TODO SIMD version
 		return avxvec(_mm256_setr_epi32(
 			_mm256_extract_epi32(this->v, 0) % _mm256_extract_epi32(b.v, 0),
@@ -212,7 +228,7 @@ struct avxvec {
 			_mm256_extract_epi32(this->v, 7) % _mm256_extract_epi32(b.v, 7)));
 	}
 
-	avxvec operator %(uint32_t b) {
+	inline avxvec operator %(uint32_t b) {
 		// TODO SIMD version
 		return avxvec(_mm256_setr_epi32(
 			_mm256_extract_epi32(this->v, 0) % b,
@@ -225,16 +241,62 @@ struct avxvec {
 			_mm256_extract_epi32(this->v, 7) % b));
 	}
 
-	avxvec operator &(avxvec b) {
+	inline avxvec operator &(avxvec b) {
 		return avxvec(_mm256_and_si256(this->v, b.v));
 	}
 
-	avxvec operator &(uint32_t b) {
+	inline avxvec operator &(uint32_t b) {
 		return avxvec(_mm256_and_si256(this->v, _mm256_set1_epi32(b)));
 	}
 };
 constexpr avxvec _ZERO_I32V8((__m256i){});
 #endif
+
+template <typename T> inline T srl_const(T base, uint32_t shift);
+template <> inline uint32_t srl_const(uint32_t base, uint32_t shift) {
+	return base >> shift;
+}
+template <> inline ssevec srl_const(ssevec base, uint32_t shift) {
+	return ssevec(_mm_srli_epi32(base.v, shift));
+}
+#ifdef __AVX2__
+template <> inline avxvec srl_const(avxvec base, uint32_t shift) {
+	return avxvec(_mm256_srli_epi32(base.v, shift));
+}
+#endif
+
+template <typename T, int den> inline T modulo(T num)
+{
+	if ( true && den == 9 ) {
+		constexpr uint64_t top1 = (((uint64_t)1)<<32);
+		constexpr uint32_t mul1 = (top1+den+1)/den;
+
+		T eff_num = num;
+
+		T acc = eff_num * mul1;
+
+		T eff_num_shifted = srl_const(eff_num, 29);
+
+		// TODO find out why this works at all
+		acc = acc - (eff_num_shifted * (((mul1>>1)+1)+(1<<(32-7))));
+		acc = acc + (1<<16)-1;
+		acc = srl_const(acc, 16);
+		acc = acc * den;
+		acc = srl_const(acc, 16);
+
+		//T ref = num % den; assert ( ref == acc );
+
+		return acc;
+	} else if ( den == 8 ) {
+		return num & (8U-1);
+	} else if ( den == 4 ) {
+		return num & (4U-1);
+	} else if ( den == 2 ) {
+		return num & (2U-1);
+	} else {
+		return num % den;
+	}
+}
 
 template <typename T> inline constexpr T zero(void);
 template <> inline constexpr uint32_t zero(void) { return 0; }
@@ -448,7 +510,7 @@ public:
 	{
 		uint32_t popmask = open_popmask<T>();
 
-		m_clock_angle = (randn<1>(seed) % 660);
+		m_clock_angle = modulo<T,660>(randn<1>(seed));
 		m_clock_angle = m_clock_angle + if_greater_else_zero(m_clock_angle, 520, 60);
 
 		if ( target_clock_angle >= 0 ) {
@@ -460,10 +522,10 @@ public:
 
 		T code0seed = randn<7>(seed);
 		m_carbon = (
-			(randn<0*3>(code0seed) % 9) * 1000
-			+ (randn<1*3>(code0seed) % 9) * 100
-			+ (randn<2*3>(code0seed) % 9) * 10
-			+ (randn<3*3>(code0seed) % 9) * 1
+			modulo<T,9>(randn<0*3>(code0seed)) * 1000
+			+ modulo<T,9>(randn<1*3>(code0seed)) * 100
+			+ modulo<T,9>(randn<2*3>(code0seed)) * 10
+			+ modulo<T,9>(randn<3*3>(code0seed)) * 1
 			+ 1111);
 
 		if ( target_carbon_code >= 0 ) {
@@ -475,10 +537,10 @@ public:
 
 
 		T code1seed = randn<8>(seed);
-		T code1digit0 = (randn<0*3>(code1seed) % 9);
-		T code1digit1 = (randn<1*3>(code1seed) % 9);
-		T code1digit2 = (randn<2*3>(code1seed) % 9);
-		T code1digit3 = (randn<3*3>(code1seed) % 9);
+		T code1digit0 = modulo<T,9>(randn<0*3>(code1seed));
+		T code1digit1 = modulo<T,9>(randn<1*3>(code1seed));
+		T code1digit2 = modulo<T,9>(randn<2*3>(code1seed));
+		T code1digit3 = modulo<T,9>(randn<3*3>(code1seed));
 
 		m_blood = (
 			(code1digit0) * 1000
@@ -495,10 +557,10 @@ public:
 		}
 
 		T code2seed = randn<9>(seed);
-		T code2digit0 = ((randn<0*3>(code2seed) & (8U-1)) + 1 + code1digit0) % 9;
-		T code2digit1 = ((randn<1*3>(code2seed) & (8U-1)) + 1 + code1digit1) % 9;
-		T code2digit2 = ((randn<2*3>(code2seed) & (8U-1)) + 1 + code1digit2) % 9;
-		T code2digit3 = ((randn<3*3>(code2seed) & (8U-1)) + 1 + code1digit3) % 9;
+		T code2digit0 = modulo<T,9>(modulo<T,8>(randn<0*3>(code2seed)) + 1 + code1digit0);
+		T code2digit1 = modulo<T,9>(modulo<T,8>(randn<1*3>(code2seed)) + 1 + code1digit1);
+		T code2digit2 = modulo<T,9>(modulo<T,8>(randn<2*3>(code2seed)) + 1 + code1digit2);
+		T code2digit3 = modulo<T,9>(modulo<T,8>(randn<3*3>(code2seed)) + 1 + code1digit3);
 		m_spin = (
 			(code2digit0) * 1000
 			+ (code2digit1) * 100
@@ -506,9 +568,9 @@ public:
 			+ (code2digit3)
 			+ 1111);
 
-		T digit0 = randn<19>(seed) % 9;
-		T digit1 = randn<20>(seed) & (8U-1);
-		T digit2 = randn<21>(seed) % 7;
+		T digit0 = modulo<T,9>(randn<19>(seed));
+		T digit1 = modulo<T,8>(randn<20>(seed));
+		T digit2 = modulo<T,7>(randn<21>(seed));
 		m_bug_code = (
 			(digit0) * 100
 			+ (digit1+if_lessequal_else_zero(digit0,digit1,1)) * 10
@@ -518,20 +580,20 @@ public:
 
 		m_arsonist = zero<T>();
 		T ars_seed = randn<22>(seed);
-		T ars6 = if_equal_else_zero(ars_seed % 6U, 5U, 5U);
+		T ars6 = if_equal_else_zero(modulo<T,6>(ars_seed), 5U, 5U);
 		ars_seed = randn<1>(ars_seed);
-		T ars5 = if_equal_else_zero(ars_seed % 5U, 4U, 4U);
+		T ars5 = if_equal_else_zero(modulo<T,5>(ars_seed), 4U, 4U);
 		ars_seed = randn<1>(ars_seed);
-		T ars4 = if_equal_else_zero(ars_seed & (4U-1), 3U, 3U);
+		T ars4 = if_equal_else_zero(modulo<T,4>(ars_seed), 3U, 3U);
 		ars_seed = randn<1>(ars_seed);
-		T ars3 = if_equal_else_zero(ars_seed % 3U, 2U, 2U);
+		T ars3 = if_equal_else_zero(modulo<T,3>(ars_seed), 2U, 2U);
 		ars_seed = randn<1>(ars_seed);
-		T ars2 = if_equal_else_zero(ars_seed & (2U-1), 1U, 1U);
+		T ars2 = if_equal_else_zero(modulo<T,2>(ars_seed), 1U, 1U);
 		m_arsonist = vec_max(
 			vec_max(vec_max(ars6, ars5), ars4),
 			vec_max(ars3, ars2));
 
-		m_briefcase = randn<30>(seed) % 19;
+		m_briefcase = modulo<T,19>(randn<30>(seed));
 
 		if ( true ) {
 			//popmask && (popmask &= mask_equal( m_spin, 1234 ));
@@ -703,12 +765,12 @@ int main(int argc, char *argv[])
 	}
 
 	//grind_whole_space<uint32_t>();
-	grind_whole_space<ssevec>();
+	//grind_whole_space<ssevec>();
 
-	// In practice, the AVX2 version is slower than the SSE4.1 version.
-	// You get more speed by enabling AVX for the VEX prefix,
-	// and then sticking with the SSE4.1 version.
-	//grind_whole_space<avxvec>();
+	// In v1.0.1 this was slower.
+	// But now we have a fast modulo 9 algorithm,
+	// so we don't have to deparallelise that part.
+	grind_whole_space<avxvec>();
 
 	return 0;
 }
