@@ -41,7 +41,7 @@
 #include <cstdio>
 #include <thread>
 
-#define OVERHILL2_VERSION "1.0.0"
+#define OVERHILL2_VERSION "1.0.1"
 
 // SSE
 #include <xmmintrin.h>
@@ -672,7 +672,7 @@ int main(int argc, char *argv[])
 			char *endptr = argv[curarg];
 			target_carbon_code = (uint32_t)strtol(argv[curarg], &endptr, 10);
 			assert ( endptr != argv[curarg] && "Please provide a number." );
-			assert ( 1111 <= target_carbon_code && target_carbon_code < 9999 && "Please provide a valid code." );
+			assert ( 1111 <= target_carbon_code && target_carbon_code <= 9999 && "Please provide a valid code." );
 			curarg++;
 
 		} else if ( !strcmp(argv[curarg], "--blood") && curarg+2 <= argc ) {
@@ -680,7 +680,7 @@ int main(int argc, char *argv[])
 			char *endptr = argv[curarg];
 			target_blood_code = (uint32_t)strtol(argv[curarg], &endptr, 10);
 			assert ( endptr != argv[curarg] && "Please provide a number." );
-			assert ( 1111 <= target_blood_code && target_blood_code < 9999 && "Please provide a valid code." );
+			assert ( 1111 <= target_blood_code && target_blood_code <= 9999 && "Please provide a valid code." );
 			curarg++;
 
 		} else {
