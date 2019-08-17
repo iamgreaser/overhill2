@@ -1,0 +1,19 @@
+# VIM
+.sw?
+.*.sw?
+
+# Python
+.mypy_cache/
+*.pyc
+*.pyo
+__pycache__/
+*.pyz
+
+# Output
+arsonist
+overhill2
+
+# Windongs
+*.exe
+*.dll
+
