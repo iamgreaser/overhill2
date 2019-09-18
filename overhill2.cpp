@@ -1,7 +1,5 @@
 /*
 ** OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder
-** Version 1.0.2
-**
 ** Copyright (c) GreaseMonkey, 2019
 **
 ** This software is provided 'as-is', without any express or implied
@@ -40,7 +38,7 @@
 #include <cstdio>
 #include <thread>
 
-#define OVERHILL2_VERSION "1.0.2"
+#define OVERHILL2_VERSION "1.0.2+git"
 
 // SSE
 #include <xmmintrin.h>
@@ -567,6 +565,13 @@ public:
 			+ (code2digit3)
 			+ 1111);
 
+		if ( target_spin_code >= 0 ) {
+			popmask &= mask_equal( m_spin, (uint32_t)target_spin_code );
+			if ( popmask == 0 ) {
+				return 0;
+			}
+		}
+
 		T digit0 = modulo<T,9>(randn<19>(seed));
 		T digit1 = modulo<T,8>(randn<20>(seed));
 		T digit2 = modulo<T,7>(randn<21>(seed));
@@ -576,6 +581,13 @@ public:
 			+ (digit2+if_lessequal_else_zero(digit0,digit2,1)+if_lessequal_else_zero(digit1,digit2,1))
 			+ 111
 		);
+
+		if ( target_bug_code >= 0 ) {
+			popmask &= mask_equal( m_bug_code, (uint32_t)target_bug_code );
+			if ( popmask == 0 ) {
+				return 0;
+			}
+		}
 
 		m_arsonist = zero<T>();
 		T ars_seed = randn<22>(seed);
@@ -592,7 +604,21 @@ public:
 			vec_max(vec_max(ars6, ars5), ars4),
 			vec_max(ars3, ars2));
 
+		if ( target_arsonist_pos >= 0 ) {
+			popmask &= mask_equal( m_arsonist, (uint32_t)target_arsonist_pos );
+			if ( popmask == 0 ) {
+				return 0;
+			}
+		}
+
 		m_briefcase = modulo<T,19>(randn<30>(seed));
+
+		if ( target_briefcase_word_idx >= 0 ) {
+			popmask &= mask_equal( m_briefcase, (uint32_t)target_briefcase_word_idx );
+			if ( popmask == 0 ) {
+				return 0;
+			}
+		}
 
 		if ( true ) {
 			//popmask && (popmask &= mask_equal( m_spin, 1234 ));
@@ -744,6 +770,31 @@ int main(int argc, char *argv[])
 			assert ( 1111 <= target_blood_code && target_blood_code <= 9999 && "Please provide a valid code." );
 			curarg++;
 
+		} else if ( !strcmp(argv[curarg], "--spin") && curarg+2 <= argc ) {
+			curarg++;
+			char *endptr = argv[curarg];
+			target_spin_code = (uint32_t)strtol(argv[curarg], &endptr, 10);
+			assert ( endptr != argv[curarg] && "Please provide a number." );
+			assert ( 1111 <= target_spin_code && target_spin_code <= 9999 && "Please provide a valid code." );
+			curarg++;
+
+		} else if ( !strcmp(argv[curarg], "--bug") && curarg+2 <= argc ) {
+			curarg++;
+			char *endptr = argv[curarg];
+			target_bug_code = (uint32_t)strtol(argv[curarg], &endptr, 10);
+			assert ( endptr != argv[curarg] && "Please provide a number." );
+			assert ( 111 <= target_bug_code && target_bug_code <= 999 && "Please provide a valid code." );
+			curarg++;
+
+		} else if ( !strcmp(argv[curarg], "--arsonist") && curarg+2 <= argc ) {
+			curarg++;
+			char *endptr = argv[curarg];
+			target_arsonist_pos = (uint32_t)strtol(argv[curarg], &endptr, 10);
+			assert ( endptr != argv[curarg] && "Please provide a number." );
+			assert ( 1 <= target_arsonist_pos && target_arsonist_pos <= 6 && "Please provide a valid number." );
+			target_arsonist_pos -= 1;
+			curarg++;
+
 		} else {
 			fprintf(stderr, "OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder\n");
 			fprintf(stderr, "Version %s\n", OVERHILL2_VERSION);
@@ -759,6 +810,9 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "\t--clock HH:MM  Target a specific starting clock value.\n");
 			fprintf(stderr, "\t--carbon NNNN  Target a specific carbon code.\n");
 			fprintf(stderr, "\t--blood NNNN   Target a specific blood code.\n");
+			fprintf(stderr, "\t--spin NNNN    Target a specific starting spin code.\n");
+			fprintf(stderr, "\t--bug NNN      Target a specific bug code.\n");
+			fprintf(stderr, "\t--arsonist N   Target a specific arsonist position [1-6].\n");
 			return 1;
 		}
 	}
