@@ -795,6 +795,17 @@ int main(int argc, char *argv[])
 			target_arsonist_pos -= 1;
 			curarg++;
 
+		} else if ( !strcmp(argv[curarg], "--briefcase") && curarg+2 <= argc ) {
+			curarg++;
+			for ( size_t i = 0; i < sizeof(briefcase_words)/sizeof(briefcase_words[0]); i++ ) {
+				if ( !strcasecmp(briefcase_words[i], argv[curarg]) ) {
+					target_briefcase_word_idx = i;
+					break;
+				}
+			}
+			assert ( target_briefcase_word_idx != -1 && "Please provide a valid briefcase word. No, \"dull\" is not one of them." );
+			curarg++;
+
 		} else {
 			fprintf(stderr, "OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder\n");
 			fprintf(stderr, "Version %s\n", OVERHILL2_VERSION);
@@ -806,13 +817,14 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "\t%s [--threads 8] [--clock HH:MM] [--carbon NNNN] [--blood NNNN]\n", argv[0]);
 			fprintf(stderr, "\n");
 			fprintf(stderr, "arguments:\n");
-			fprintf(stderr, "\t--threads N    Specify the number of CPU threads to use.\n");
-			fprintf(stderr, "\t--clock HH:MM  Target a specific starting clock value.\n");
-			fprintf(stderr, "\t--carbon NNNN  Target a specific carbon code.\n");
-			fprintf(stderr, "\t--blood NNNN   Target a specific blood code.\n");
-			fprintf(stderr, "\t--spin NNNN    Target a specific starting spin code.\n");
-			fprintf(stderr, "\t--bug NNN      Target a specific bug code.\n");
-			fprintf(stderr, "\t--arsonist N   Target a specific arsonist position [1-6].\n");
+			fprintf(stderr, "\t--threads N       Specify the number of CPU threads to use.\n");
+			fprintf(stderr, "\t--clock HH:MM     Target a specific starting clock value.\n");
+			fprintf(stderr, "\t--carbon NNNN     Target a specific carbon code.\n");
+			fprintf(stderr, "\t--blood NNNN      Target a specific blood code.\n");
+			fprintf(stderr, "\t--spin NNNN       Target a specific starting spin code.\n");
+			fprintf(stderr, "\t--bug NNN         Target a specific bug code.\n");
+			fprintf(stderr, "\t--arsonist N      Target a specific arsonist position [1-6].\n");
+			fprintf(stderr, "\t--briefcase WORD  Target a specific briefcase word.\n");
 			return 1;
 		}
 	}
