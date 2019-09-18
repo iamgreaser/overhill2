@@ -1,6 +1,6 @@
 /*
 ** OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder
-** Version 1.0.0
+** Version 1.0.1+git
 **
 ** Copyright (c) GreaseMonkey, 2019
 **
@@ -81,7 +81,7 @@ int32_t target_bug_code = -1;
 int32_t target_arsonist_pos = -1;
 int32_t target_briefcase_word_idx = -1;
 
-int32_t thread_count = 8;
+int32_t thread_count = 1;
 
 //constexpr uint32_t istep = 0x1;
 constexpr uint32_t istep = 0x10000000;
@@ -651,7 +651,7 @@ template <typename T, int Step> void grind_seed_block(uint32_t offs, uint32_t be
 			for ( uint32_t j = 0; j < simd_width<T>(); j++ ) {
 				if ( (mask & (1<<j)) != 0 ) {
 					printf("%10u,0x%08X,%02d:%02d,%04d,%04d,%04d,%03d,%1d,%2d,%4s\n",
-						i+j,
+						i+j*Step,
 						simd_elem(seed, j),
 						simd_elem(sim.m_clock_angle, j) / 60,
 						simd_elem(sim.m_clock_angle, j) % 60,
