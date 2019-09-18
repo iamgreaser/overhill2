@@ -31,9 +31,8 @@
 ** Given a starting clock time and a carbon code, this can produce a
 ** full set of seeds in under half a second on my i5-6500.
 **
-** You will need SSE4.1 to compile this.
-** For extra performance, enable AVX purely so you can get VEX opcodes.
-** (The 256-bit stuff AVX adds is actually slower by this point.)
+** You will need at least SSE4.1 to compile this.
+** For extra performance, enable AVX2.
 */
 #include <cassert>
 #include <cstring>
@@ -764,13 +763,23 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//grind_whole_space<uint32_t>();
-	//grind_whole_space<ssevec>();
-
+#ifdef __AVX2__
 	// In v1.0.1 this was slower.
 	// But now we have a fast modulo 9 algorithm,
 	// so we don't have to deparallelise that part.
 	grind_whole_space<avxvec>();
+#else
+#ifdef __SSE4_1__
+	// I'm not going to assume that everyone has AVX2.
+	// But I *will* assume SSE2 at the very least.
+	grind_whole_space<ssevec>();
+#else
+	// If you want to grind a seed on a Raspberry Pi,
+	// I wouldn't recommend it, but this should work.
+	grind_whole_space<uint32_t>();
+#endif
+#endif
+
 
 	return 0;
 }
