@@ -12,7 +12,5 @@ Given a starting clock time and a carbon code, this can produce a
 full set of seeds in under half a second on my i5-6500.
 
 You will need SSE4.1 to compile this.
-For extra performance, enable AVX purely so you can get VEX opcodes.
-(The 256-bit stuff AVX adds is actually slower by this point.)
-
+** For extra performance, enable AVX2.
 

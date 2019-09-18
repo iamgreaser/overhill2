@@ -1,6 +1,6 @@
 /*
 ** OverHill2: An obscenely fast Silent Hill 2 RNG seed grinder
-** Version 1.0.1+git
+** Version 1.0.2
 **
 ** Copyright (c) GreaseMonkey, 2019
 **
@@ -40,7 +40,7 @@
 #include <cstdio>
 #include <thread>
 
-#define OVERHILL2_VERSION "1.0.1+git"
+#define OVERHILL2_VERSION "1.0.2"
 
 // SSE
 #include <xmmintrin.h>
