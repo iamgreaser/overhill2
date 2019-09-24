@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <thread>
 
-#define OVERHILL2_VERSION "1.0.2+git"
+#define OVERHILL2_VERSION "1.1.0"
 
 // SSE
 #include <xmmintrin.h>
